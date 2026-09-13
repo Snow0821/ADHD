@@ -1,0 +1,30 @@
+{
+  "name": "adhd",
+  "version": "0.1.0",
+  "description": "Preserve ideas and finish one goal at a time with a persistent task queue, blocking stack, knowledge graph, and checkpoints.",
+  "author": {
+    "name": "Snow0821",
+    "url": "https://github.com/Snow0821"
+  },
+  "homepage": "https://github.com/Snow0821/ADHD#readme",
+  "repository": "https://github.com/Snow0821/ADHD",
+  "keywords": ["adhd", "focus", "workflow", "knowledge-graph", "queue", "stack", "작업관리"],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "ADHD",
+    "shortDescription": "아이디어를 보존하며 현재 목표를 끝까지 실행",
+    "longDescription": "한 번에 하나의 목표를 진행하고, 새 작업은 큐에, 선행 과제는 스택에 기록합니다. 지식·결정·미해결 질문과 중단 지점을 보존해 다음 대화에서 이어갑니다.",
+    "developerName": "Snow0821",
+    "category": "Productivity",
+    "capabilities": ["Read", "Write"],
+    "websiteURL": "https://github.com/Snow0821/ADHD",
+    "brandColor": "#2E9EFF",
+    "composerIcon": "./skills/adhd/assets/icon.svg",
+    "logo": "./skills/adhd/assets/icon.svg",
+    "defaultPrompt": [
+      "ADHD로 지금 할 일을 정리하고 첫 번째 목표부터 진행해줘.",
+      "ADHD에 기록된 중단 지점을 확인하고 작업을 이어가줘.",
+      "이 아이디어를 기록하고 현재 작업을 계속해줘."
+    ]
+  }
+}
