@@ -1,6 +1,6 @@
 {
   "name": "adhd",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Preserve ideas and finish one goal at a time with a persistent task queue, blocking stack, knowledge graph, and checkpoints.",
   "author": {
     "name": "Snow0821",

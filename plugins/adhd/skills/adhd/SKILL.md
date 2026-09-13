@@ -40,6 +40,16 @@ Update an existing record when it already represents the input.
 
 Search before likely duplication. Leave uncertain knowledge relations unlinked. Unresolved is not an inbox or a waiting queue; it may remain open when execution is idle.
 
+## Optional plugin feedback
+
+When a concrete problem or improvement idea concerns ADHD itself, follow [feedback.md](references/feedback.md) before archiving it. Keep normal task notes and user-requested deliverables under the existing workflow.
+
+- Ask once at the first useful opportunity whether this user wants no collection, private records, or proposals for sharing. Continue the active task if they decline or do not answer; do not collect feedback by default.
+- Keep the user's choice in their private Control records. Reuse only a choice belonging to the current user; the maintainer's preference is not a default for other users.
+- Store opted-in feedback in Knowledge. Search for an existing record first. Collecting a candidate does not commit it to the task queue or justify interrupting the active goal.
+- Treat recording and public posting as separate choices. Show the proposed public content and destination before publishing; honor an existing approval for that exact proposal without asking again.
+- Keep shared proposals in the project's GitHub Issues. Link an adopted proposal to its execution task and close it after recording the fix, verification, and affected version.
+
 ## Keep the workflow small
 
 - Write conversations and artifacts concisely while retaining what is needed to understand, act, or verify. Lead with the result; expose internal bookkeeping only when useful.
