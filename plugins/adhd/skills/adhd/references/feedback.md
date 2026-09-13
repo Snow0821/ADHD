@@ -1,71 +1,43 @@
-# Optional ADHD feedback
+# Optional generalizable feedback
 
-Use this procedure for observations about the ADHD plugin. It does not change the handling of ordinary project knowledge, required task diagnostics, or an explicitly requested deliverable. Do not run an unsolicited feedback review after every task.
+Use this procedure for observations about the ADHD plugin, applying the [knowledge boundary](../SKILL.md#knowledge-boundary). Do not run an unsolicited feedback review after every task. A user's normal task output and necessary diagnostics remain part of that task.
 
-## User preference
+## Recording choice
 
-Use an established durable, private runtime and a stable user key verified from the active host/account context. Do not use the repository owner, a display name, or a different participant as evidence of the current user's identity. Do not move private feedback into a shared runtime; if a private destination is unavailable, continue the main task and arrange one only when collection is requested.
+At the first useful discovery, ask whether the current user wants generalizable improvement notes:
 
-Find active Control entries whose `sources` include both `adhd:feedback-preference` and `user:<verified-key>`. Read the statement, not just the title. Conflicting choices or an unverified user are not collection permission.
+> ADHD의 문제나 개선 아이디어를 다른 사용자에게도 도움이 되는 형태로 정리할까요?
 
-When there is no applicable choice, ask at the first meaningful discovery:
-
-> ADHD 사용 중 발견한 문제나 개선 아이디어를 모아둘까요?
-
-| Choice | Stored mode | Behavior |
+| Choice | Mode | Behavior |
 | --- | --- | --- |
-| 기록 안 함 | `off` | Do not create or append plugin-feedback records. |
-| 개인 보관 | `private` | Record feedback in this user's private Knowledge. |
-| 공유 제안 | `share` | Keep private records and prepare proposals for separate public review. |
-| No answer / later | `deferred` | Do not collect; continue the task without repeating the question. |
+| 정리하지 않음 | `off` | Do not archive plugin feedback. |
+| 일반화해서 정리 | `general` | Record transferable feedback without personal context. |
+| No answer / later | `deferred` | Continue the task without collecting or repeating the question. |
 
-An explicit existing user preference can satisfy this choice without another question. Approval to implement this feature, installation of the plugin, or permission to record privately does not select public posting.
+Honor an explicit applicable choice already given by the current user. Installing the plugin or approving development is not consent to feedback collection or publication. Never archive a declined observation under another store to bypass the choice.
 
-Save only the preference when asking is dismissed; do not save the discovered problem or idea as an unanswered question, draft, task, or hidden feedback log. For a known user, `deferred` prevents repeated prompts until the user reopens the setting. If identity or private storage is unavailable, remember the dismissal for this conversation and do not invent a durable save.
+When the established runtime supports attributing consent to the current user, use the existing Control helper with source `adhd:feedback-preference` and a statement `mode: off|general|deferred`. Preserve an existing verified user qualifier when needed to distinguish participants. Store only the mode and its authorization context; do not create a user profile or require a new account for feedback. If a choice cannot be reliably attributed, use the current conversation's answer without inventing a persistent save. A repository owner's or another user's choice does not apply.
 
-Use the existing Control helper, with a statement containing `mode: off|private|share|deferred` and the user's actual choice as the rationale:
+Use `--supersedes` only for that user's prior preference when they change it. Applicable legacy `off`/`deferred` choices still prevent collection; legacy `private`/`share` choices do not authorize the new mode or public posting. Do not create new personal archives or delete existing user records as part of this policy update. Switching off stops future feedback writes; removal of past records is a separate requested action.
 
-```bash
-python3 "$ADHD_SCRIPT_DIR/adhdctl.py" --root "$ADHD_ROOT" control-create \
-  "ADHD feedback preference" --kind policy \
-  --statement "mode: private" --rationale "User chose private collection" \
-  --source adhd:feedback-preference --source "user:$ADHD_USER_KEY"
-```
+## Generalize before recording
 
-The command is an example, not a default to execute. Set `ADHD_USER_KEY` only from verified context. When the user changes the setting, create the new entry with `--supersedes` referring only to their prior preference. Switching off stops future feedback writes; it does not delete existing records or public issues. Handle removal only when requested, and do not claim a public copy was removed by changing a local setting.
+Keep a record only when it describes a reusable problem, method, or proposal. Exclude personal preferences, private conversations, identities, account data, and person-specific project details. Removing identifiers alone is insufficient: the lesson must stand on its own. Mark suspected causes and unverified reports explicitly, and retain the limits of the evidence.
 
-## Private capture
+Search for a matching record before writing. Use `graphctl.py` from [protocol.md](protocol.md#knowledge-operations), with kind `claim` for a supported observation or `idea` for a proposal and source `adhd:feedback`. Include a verified plugin version/commit when relevant; do not infer an installed version from the repository's latest version. Use an existing appropriate scope, without creating a project just for feedback.
 
-Before every feedback write, check the current user's effective preference. Search their existing feedback before creating a node; update an existing occurrence when it describes the same underlying problem or proposal. Keep private feedback out of public repository commits and issue search queries.
-
-Use `graphctl.py` as described in [protocol.md](protocol.md#knowledge-operations): `claim` for an observed problem and `idea` for a proposal. Add sources `adhd:feedback`, `user:<verified-key>`, and the observed plugin version or commit. Use an existing registered ADHD project scope when available, otherwise `common` in the user's private runtime. Do not create a project tree just to record feedback.
-
-Keep one compact record:
-
-| Field | Content |
-| --- | --- |
-| Title and type | One problem or idea; mark an unverified report as unverified. |
-| Context | Situation and version/environment relevant to the observation. |
-| Observation | Expected versus actual behavior for a problem; friction and expected benefit for an idea. |
-| Evidence | Minimal example or useful source; separate facts from suspected causes. |
-| Next check | A useful verification or reconsideration condition, if known. |
-
-Use the latest verified observation; do not infer the installed version from GitHub's latest release. Recording an idea does not require knowing the solution. Do not create placeholder evidence or a task merely because a candidate exists.
+Keep the record compact: title/type, relevant conditions, expected versus observed behavior or proposed benefit, generalizable evidence, and a next verification step if known. A generalized reproduction can replace private input; do not attach the original personal evidence. If there is no useful transferable content, do not create a record. Recording a candidate does not commit an execution task.
 
 ## Public proposal
 
-For `share`, prepare a concise public proposal and show its title, body, and destination (`Snow0821/ADHD` GitHub Issues) to the user. Use generalized situations and minimal reproduction examples; omit private conversations, names, paths, account identifiers, and secrets unless the user specifically requests appropriate public information. Explain that the proposal will be publicly visible.
+Generalizable content is not automatically public. Prepare a concise issue title/body and show the user the destination (`Snow0821/ADHD` GitHub Issues) and that the proposal will be publicly visible. Publish only with authorization for the reviewed content and destination; do not ask again when that exact authorization is already present.
 
-Publish only after the user has authorized that reviewed proposal and destination. If the exact proposal is already approved, proceed without another confirmation. A `share` preference alone is permission to prepare proposals, not unattended publication. If the user changes their choice or withdraws approval before posting, use their current instruction.
+Use the connected GitHub capability to search open and closed issues with public-safe terms. Prefer updating a matching issue over duplicating it, and include the intended issue/comment destination in the review. If the destination changes after review, resolve that change before posting. Do not send feedback through another service as a fallback.
 
-Use the connected GitHub capability to inspect existing open and closed issues using only public-safe terms. Add new evidence to a matching issue instead of creating a duplicate, but include the intended issue/comment destination in the public review. If an issue appears after review, prepare the matching update before posting. Do not send feedback through email or another service as a fallback.
+On a failed or unavailable submission, retain only an already-authorized generalized note with the actual pending reason. Verify the returned issue URL before reporting success, and check for an existing submission before retrying an ambiguous write. Link the issue from Knowledge; the shared proposal's full discussion belongs in the issue, without a mirrored personal archive.
 
-If GitHub is unavailable or posting fails, retain the authorized private record and mark submission as pending with the actual reason. Do not report a submission until its returned URL is verified. After an ambiguous failure, check whether the proposal was created before retrying; do not repeat an uncertain write blindly.
+## Adoption
 
-After publication, link the verified issue URL from the private record. GitHub owns the shared proposal's subsequent public discussion; retain private evidence only for its distinct private purpose rather than mirroring the whole issue.
+Continue the current goal after capture. A blocking task is appropriate only when the defect prevents that authorized goal. Necessary task diagnostics and fixes can proceed even when feedback collection is off.
 
-## Adoption and closure
-
-Continue the user's current goal after capture. Use a blocking task only when the defect prevents that authorized goal; feedback preferences do not prevent necessary task diagnostics or fixes.
-
-When an improvement is actually adopted, create or reuse an execution task linked to its issue or knowledge node. Record a generally applicable adopted rule in Control only when it becomes effective. At completion, retain the fix commit, verification, and affected version in the issue and History. Mark source-only validation separately from a verified installed-plugin result. Deferred proposals can remain open with a reconsideration condition; they are not an execution backlog unless action was committed.
+Create or reuse an execution task when an improvement is adopted, linked to the issue or knowledge node. Record an adopted general rule in Control only when effective. Retain the fix commit, verification, and affected version in the issue and History, distinguishing source validation from verified installed behavior. Deferred proposals may remain open with a reconsideration condition; they are not committed work by default.

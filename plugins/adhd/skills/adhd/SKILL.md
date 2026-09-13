@@ -5,7 +5,7 @@ description: Maintain an ADHD workspace with a FIFO task queue, LIFO blocking st
 
 # ADHD
 
-Preserve ideas while finishing the current goal. Keep execution state and reusable knowledge outside model memory so work survives interruptions and model changes.
+Preserve generalizable ideas while finishing the current goal. Keep necessary execution state and reusable knowledge outside model memory so work survives interruptions and model changes.
 
 ## Start or resume
 
@@ -25,6 +25,13 @@ Preserve ideas while finishing the current goal. Keep execution state and reusab
 
 One active task means one owned goal. Independent reads and checks can run in parallel within it; serialize shared state changes. `taskctl.py spawn` changes task ownership and is not a subagent launch.
 
+## Knowledge boundary
+
+- Persist knowledge only when it is relevant and reusable across users: transferable methods, supported findings, general concepts, or reproducible examples. Do not archive personal preferences, biographies, private conversations, account details, or facts specific to one person's project as Knowledge.
+- Generalization must retain evidence and limits. Removing a name does not make a personal observation universal; keep hypotheses labeled as hypotheses, and skip a record when no useful general lesson remains.
+- Task checkpoints, completion evidence, and minimal operational choices such as recording consent support execution. Keep only what is needed for that purpose; do not use Task, Control, History, or Unresolved as a substitute personal-memory store.
+- The shared plugin contains workflow rules, relevant general knowledge, and generalized test cases. Personalization through a user-selected external database is deferred; do not add user profiles, database integrations, or storage abstractions for it now.
+
 ## Route information
 
 Update an existing record when it already represents the input.
@@ -32,21 +39,21 @@ Update an existing record when it already represents the input.
 | Information | Store | Preserve |
 |---|---|---|
 | Committed action | Task | Goal, necessary steps, checkpoint, completion evidence |
-| Durable idea, fact, question, source | Knowledge | One core idea; `common` or `project:<id>` scope; justified relations |
+| Generalizable idea, fact, question, source | Knowledge | One transferable idea, evidence and limits; `common` or `project:<id>` scope; justified relations |
 | Effective principle, policy, constraint, assumption, decision | Control | Current statement and rationale; supersede replaced entries |
 | Completed work or past decision | History | Append-only event summary and references |
 | Processed uncertainty | Unresolved | Question, why unresolved, resolution condition; link a task for committed follow-up |
 | Chosen deliverable structure | External project | Role, specification, acceptance condition, artifact links |
 
-Search before likely duplication. Leave uncertain knowledge relations unlinked. Unresolved is not an inbox or a waiting queue; it may remain open when execution is idle.
+Search before likely duplication. Apply the knowledge boundary regardless of scope; `common` describes workspace scope, not permission to publish. Leave uncertain knowledge relations unlinked. Unresolved is not an inbox or a waiting queue; it may remain open when execution is idle.
 
 ## Optional plugin feedback
 
 When a concrete problem or improvement idea concerns ADHD itself, follow [feedback.md](references/feedback.md) before archiving it. Keep normal task notes and user-requested deliverables under the existing workflow.
 
-- Ask once at the first useful opportunity whether this user wants no collection, private records, or proposals for sharing. Continue the active task if they decline or do not answer; do not collect feedback by default.
-- Keep the user's choice in their private Control records. Reuse only a choice belonging to the current user; the maintainer's preference is not a default for other users.
-- Store opted-in feedback in Knowledge. Search for an existing record first. Collecting a candidate does not commit it to the task queue or justify interrupting the active goal.
+- Ask once at the first useful opportunity whether the current user wants generalized improvement notes. Continue the active task if they decline or do not answer; do not collect feedback by default.
+- Keep only the minimal recording choice in Control when it can be attributed to the current user. A maintainer's choice never opts in other users. Do not create a personal profile or private feedback archive.
+- After consent, retain only generalizable feedback in Knowledge and search for an existing record first. Collecting a candidate does not commit it to the task queue or justify interrupting the active goal.
 - Treat recording and public posting as separate choices. Show the proposed public content and destination before publishing; honor an existing approval for that exact proposal without asking again.
 - Keep shared proposals in the project's GitHub Issues. Link an adopted proposal to its execution task and close it after recording the fix, verification, and affected version.
 
