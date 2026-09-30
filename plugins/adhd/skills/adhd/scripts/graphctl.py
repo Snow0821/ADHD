@@ -14,6 +14,8 @@ from typing import Any
 
 import yaml
 
+from _knowledge_db import binding, cache_guard
+
 from _storage import (
     _atomic_write_text,
     _clean_list,
@@ -101,8 +103,9 @@ class GraphStore:
                 fcntl.flock(lock.fileno(), fcntl.LOCK_UN)
 
     @contextmanager
-    def locked(self):
+    def locked(self, *, mutate: bool = False):
         with self._raw_lock():
+            cache_guard(self.root, mutate=mutate, error_type=GraphError)
             self._ensure_unlocked()
             yield
 
@@ -157,6 +160,7 @@ class GraphStore:
             raise GraphError("Graph ID and name cannot be empty.")
         self._validate_scope(default_scope)
         with self._raw_lock():
+            cache_guard(self.root, mutate=True, error_type=GraphError)
             existed = self.graph_path.exists()
             self._ensure_unlocked()
             requested = {
@@ -292,7 +296,7 @@ class GraphStore:
             raise GraphError(f"Unsupported knowledge node kind: {kind}")
         if status not in STATUSES:
             raise GraphError(f"Unsupported knowledge node status: {status}")
-        with self.locked():
+        with self.locked(mutate=True):
             state = self._load_state()
             graph = self._load_graph()
             node_scope = self._validate_scope(
@@ -345,7 +349,7 @@ class GraphStore:
             raise GraphError("Knowledge node title cannot be empty.")
         if core is not None and not core.strip():
             raise GraphError("Knowledge node core cannot be empty.")
-        with self.locked():
+        with self.locked(mutate=True):
             normalized, metadata, body = self._read_node(node_id)
             if title is not None:
                 metadata["title"] = title.strip()
@@ -392,7 +396,7 @@ class GraphStore:
             "to": target_id,
             "reason": reason.strip(),
         }
-        with self.locked():
+        with self.locked(mutate=True):
             self._read_node(source_id)
             self._read_node(target_id)
             state = self._load_state()
@@ -409,7 +413,7 @@ class GraphStore:
         target_id = normalize_node_id(target)
         candidate = {"from": source_id, "relation": relation, "to": target_id}
         key = self._edge_key(candidate)
-        with self.locked():
+        with self.locked(mutate=True):
             state = self._load_state()
             edges = self._load_edges()
             remaining = [edge for edge in edges if self._edge_key(edge) != key]
@@ -562,6 +566,7 @@ class GraphStore:
                 _, metadata, _ = self._read_node(node_id)
                 unlinked.append(f"{node_id} {metadata.get('title', '<untitled>')}")
             return {
+                "backend": binding(self.root) or {"backend": "files"},
                 "graph_id": graph.get("graph_id"),
                 "kind": graph.get("kind"),
                 "name": graph.get("name"),

@@ -8,11 +8,13 @@ import fcntl
 import re
 import sys
 from collections import Counter
-from contextlib import contextmanager
+from contextlib import ExitStack, contextmanager
 from pathlib import Path
 from typing import Any, Iterable
 
 import yaml
+
+from _knowledge_db import cache_guard
 
 from _storage import (
     _atomic_write_text,
@@ -87,12 +89,17 @@ class TreeStore:
     @contextmanager
     def _raw_lock(self):
         self.project_dir.mkdir(parents=True, exist_ok=True)
-        with self.lock_path.open("a+", encoding="utf-8") as lock:
+        # Lock order is always knowledge workspace, then project. Keep knowledge
+        # validation and the project write in one critical section.
+        with ExitStack() as stack:
+            if self.knowledge_root is not None and self.knowledge_root.exists():
+                workspace = stack.enter_context(
+                    (self.knowledge_root / ".taskctl.lock").open("a+", encoding="utf-8")
+                )
+                fcntl.flock(workspace.fileno(), fcntl.LOCK_EX)
+            lock = stack.enter_context(self.lock_path.open("a+", encoding="utf-8"))
             fcntl.flock(lock.fileno(), fcntl.LOCK_EX)
-            try:
-                yield
-            finally:
-                fcntl.flock(lock.fileno(), fcntl.LOCK_UN)
+            yield
 
     @contextmanager
     def locked(self):
@@ -156,6 +163,8 @@ class TreeStore:
             raise TreeError(
                 "Knowledge references require the ADHD runtime path via --knowledge-root."
             )
+        if result:
+            cache_guard(self.knowledge_root, reference=True, error_type=TreeError)
         for node_id in result:
             if not KNOWLEDGE_ID_PATTERN.fullmatch(node_id):
                 raise TreeError(f"Knowledge reference has an invalid ID: {node_id}")
@@ -677,6 +686,12 @@ class TreeStore:
                         if len(knowledge) != len(set(knowledge)):
                             errors.append(f"{node_id}: duplicate knowledge references")
                         for value in knowledge:
+                            if self.knowledge_root is not None:
+                                try:
+                                    cache_guard(self.knowledge_root, reference=True, error_type=TreeError)
+                                except TreeError as error:
+                                    errors.append(f"{node_id}: {error}")
+                                    continue
                             if self.knowledge_root is None or not (
                                 self.knowledge_root
                                 / "knowledge"
