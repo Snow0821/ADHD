@@ -16,6 +16,8 @@ from typing import Any
 
 import yaml
 
+from _knowledge_db import cache_guard
+
 from _storage import (
     _atomic_write_text,
     _dump_yaml,
@@ -307,6 +309,7 @@ class WorkspaceStore:
         projects = self._load_projects().get("projects", {}) if self.projects_path.exists() else {}
         for reference in refs:
             if KNOWLEDGE_REF_PATTERN.fullmatch(reference):
+                cache_guard(self.root, reference=True, error_type=WorkspaceError)
                 node_id = reference.split(":", 1)[1]
                 path = self.root / "knowledge" / "nodes" / f"{node_id}.md"
             elif CONTROL_REF_PATTERN.fullmatch(reference):
@@ -325,6 +328,10 @@ class WorkspaceStore:
 
     def validate(self) -> list[str]:
         self.ensure()
+        with self.locked():
+            return self._validate_unlocked()
+
+    def _validate_unlocked(self) -> list[str]:
         errors: list[str] = []
         try:
             control = self._load_control()

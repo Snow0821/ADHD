@@ -13,6 +13,8 @@ from typing import Any, Iterable
 
 import yaml
 
+from _knowledge_db import cache_guard
+
 from _storage import (
     _atomic_write_text,
     _dump_yaml,
@@ -225,6 +227,8 @@ class TaskStore:
             knowledge, KNOWLEDGE_ID_PATTERN, "Knowledge"
         )
         project_ids = _normalize_references(project, PROJECT_REF_PATTERN, "Project")
+        if knowledge_ids:
+            cache_guard(self.root, reference=True, error_type=StateError)
         for node_id in knowledge_ids:
             if not (self.root / "knowledge" / "nodes" / f"{node_id}.md").exists():
                 raise StateError(f"Knowledge reference does not exist: {node_id}")
@@ -541,7 +545,10 @@ class TaskStore:
             return state
 
     def validate(self) -> list[str]:
-        self.ensure()
+        with self.locked():
+            return self._validate_unlocked()
+
+    def _validate_unlocked(self) -> list[str]:
         state = self._load_state()
         errors: list[str] = []
         if not isinstance(state["next_id"], int) or state["next_id"] < 0:
@@ -608,6 +615,8 @@ class TaskStore:
                     errors.append(f"{path.name}: {key} contains duplicate IDs")
                 for value in values:
                     try:
+                        if key == "knowledge":
+                            cache_guard(self.root, reference=True, error_type=StateError)
                         target = (
                             self.root / "knowledge" / "nodes" / f"{value}.md"
                             if key == "knowledge"

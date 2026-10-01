@@ -9,10 +9,11 @@ Preserve generalizable ideas while finishing the current goal. Keep necessary ex
 
 ## Start or resume
 
-- The helpers need Python 3.10+, PyYAML, and a POSIX host (Linux, macOS, or WSL). Check these before first use; dependency versions are in the plugin's `requirements.txt`.
+- The helpers need Python 3.10+, PyYAML >=6.0,<7, and a POSIX host (Linux, macOS, or WSL). Check these before first use.
 - Use the user's workspace or the established ADHD root; otherwise find the nearest ancestor with `.adhd/state.yaml`. Do not create a second runtime merely because the working directory changed.
 - When persistent execution state is needed and absent, initialize `<workspace>/.adhd` with `adhdctl.py init`. This creates all five stores. Keep projects and artifacts outside the runtime and mutable data outside the installed skill.
 - On resume, read status, the active checkpoint, and relevant effective control entries. Validate existing runtime once before changing it. Use [protocol.md](references/protocol.md) for the relevant commands and [recovery.md](references/recovery.md) only for legacy state or an interrupted write.
+- File-backed knowledge is the default. If database-backed knowledge is configured, follow [database.md](references/database.md) to refresh its verified cache before relying on it; never silently switch to local file authority when the connector is unavailable.
 - Register managed projects in `control/projects.yaml`. Reuse their existing structure; add only the tree nodes needed to describe chosen outputs. Infer an initial purpose, specification, and acceptance condition from the request when clear.
 
 ## Execute
@@ -27,10 +28,11 @@ One active task means one owned goal. Independent reads and checks can run in pa
 
 ## Knowledge boundary
 
-- Persist knowledge only when it is relevant and reusable across users: transferable methods, supported findings, general concepts, or reproducible examples. Do not archive personal preferences, biographies, private conversations, account details, or facts specific to one person's project as Knowledge.
+- By default, persist only relevant knowledge reusable across users: transferable methods, supported findings, general concepts, or reproducible examples. Do not archive personal preferences, biographies, private conversations, account details, or facts specific to one person's project as Knowledge.
+- Exception: with explicit opt-in to a user-selected database and the intended information scope, task-relevant private project knowledge may be stored there. This does not authorize personal profiles, broad sensitive-data collection, or sharing beyond that destination. Keep evidence and limits, and follow the host's data-sharing permissions.
 - Generalization must retain evidence and limits. Removing a name does not make a personal observation universal; keep hypotheses labeled as hypotheses, and skip a record when no useful general lesson remains.
 - Task checkpoints, completion evidence, and minimal operational choices such as recording consent support execution. Keep only what is needed for that purpose; do not use Task, Control, History, or Unresolved as a substitute personal-memory store.
-- The shared plugin contains workflow rules, relevant general knowledge, and generalized test cases. Personalization through a user-selected external database is deferred; do not add user profiles, database integrations, or storage abstractions for it now.
+- The shared plugin contains workflow rules, relevant general knowledge, and generalized test cases. Keep user-specific database configuration and content in the private runtime, never in the public repository. The optional connector bridge stores only Knowledge; Task, Control, History, Unresolved, and project artifacts retain their existing homes.
 
 ## Route information
 
@@ -39,7 +41,7 @@ Update an existing record when it already represents the input.
 | Information | Store | Preserve |
 |---|---|---|
 | Committed action | Task | Goal, necessary steps, checkpoint, completion evidence |
-| Generalizable idea, fact, question, source | Knowledge | One transferable idea, evidence and limits; `common` or `project:<id>` scope; justified relations |
+| Reusable idea, fact, question, source; explicitly permitted private project knowledge | Knowledge | One relevant idea, evidence and limits; `common` or `project:<id>` scope; justified relations |
 | Effective principle, policy, constraint, assumption, decision | Control | Current statement and rationale; supersede replaced entries |
 | Completed work or past decision | History | Append-only event summary and references |
 | Processed uncertainty | Unresolved | Question, why unresolved, resolution condition; link a task for committed follow-up |
@@ -73,7 +75,8 @@ Use the scripts for IDs, ordering, atomic file writes, and structural validation
 - Every open task is in exactly one of `active`, `stack`, or `queue`. There is at most one active task.
 - Idle requires `active: null`, `stack: []`, `queue: []`, and no unprocessed input.
 - Knowledge is scoped; project-node references are qualified as `<project-id>:p000000`.
+- In database mode, edit only an explicit draft and publish through the connector bridge. A local draft, pending write, or cache made stale by interruption is not published knowledge and cannot satisfy task/tree references. Confirm publication with a fresh database read.
 - Preserve history and archive obsolete project scope instead of deleting it.
 - Save the runtime in the user's established durable, private workspace. In a temporary execution environment, use the host's supported persistence workflow and verify the save before claiming work will survive a later session. Keep personal runtime records out of the plugin source repository.
 
-Read only the command sections needed in [protocol.md](references/protocol.md). Recovery and schema-1 migration remain available in [recovery.md](references/recovery.md).
+Read only the command sections needed in [protocol.md](references/protocol.md). Database setup and conflict recovery are in [database.md](references/database.md); local recovery and schema-1 migration remain in [recovery.md](references/recovery.md).

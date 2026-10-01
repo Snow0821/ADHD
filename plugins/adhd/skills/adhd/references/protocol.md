@@ -8,6 +8,7 @@ Read the section needed for the current operation. Use each command's `--help` f
 - [Initialize and register](#initialize-and-register)
 - [Task operations](#task-operations)
 - [Knowledge operations](#knowledge-operations)
+- [Database-backed knowledge](#database-backed-knowledge)
 - [Control and unresolved](#control-and-unresolved)
 - [Project operations](#project-operations)
 - [Validation and completion](#validation-and-completion)
@@ -25,6 +26,8 @@ PROJECT_ROOT=/absolute/workspace/projects/project-slug
 ```
 
 The runtime owns `state.yaml`, `task/{open,closed}`, `knowledge`, `control`, `history`, and `unresolved`. Control entries and unresolved items have index files. The project registry is `control/projects.yaml`; each project owns `project/tree.yaml`, `project/nodes`, and its artifacts.
+
+Knowledge uses files unless explicitly configured otherwise. In database mode, local knowledge files are a verified cache or an explicit edit draft; the database remains authoritative. Other stores and project artifacts stay local.
 
 Task, knowledge, and control mutations share a workspace lock. Tree mutations use a project lock. Individual file replacement is atomic; a multi-file operation can still be interrupted. Serialize mutations and use [recovery.md](recovery.md) when necessary.
 
@@ -68,6 +71,8 @@ python3 "$ADHD_SCRIPT_DIR/taskctl.py" --root "$ADHD_ROOT" dispatch
 
 Omit references that do not exist. Knowledge IDs are workspace-wide; project references resolve through the registry. Dispatch is idempotent while a valid active task exists.
 
+In database mode, knowledge references require a clean, verified published cache. Drafts, pending writes, and interrupted/stale caches cannot establish task or project references; refresh through the connector first.
+
 Checkpoint for a handoff, changed requirement, or blocked answer:
 
 ```bash
@@ -99,6 +104,8 @@ Outcomes: `completed`, `cancelled`, `obsolete`. Omit unused fields; use `--creat
 
 ## Knowledge operations
 
+These commands use local files by default. In database mode, refresh first and run `graphdb.py begin-edit` before any `graphctl.py` mutation; publish and re-read afterward as described below.
+
 ```bash
 python3 "$ADHD_SCRIPT_DIR/graphctl.py" --root "$ADHD_ROOT" search "query" --limit 5
 python3 "$ADHD_SCRIPT_DIR/graphctl.py" --root "$ADHD_ROOT" create "Idea title" \
@@ -119,6 +126,12 @@ python3 "$ADHD_SCRIPT_DIR/graphctl.py" --root "$ADHD_ROOT" update k000001 \
 | Relation | `related_to`, `part_of`, `depends_on`, `supports`, `contradicts`, `extends`, `supersedes` |
 
 `related_to` and `contradicts` are symmetric; the rest are directional. Use `show`, `neighbors <id> --hops 2`, or `status` to read relevant context.
+
+## Database-backed knowledge
+
+Optional setup, migration, connector calls, and conflict recovery are documented once in [database.md](database.md). The normal cycle is `read-query` → connector read → `apply-read` → `begin-edit` → existing graph edits → `write-query` → connector write → `apply-write` → fresh read and `apply-read`.
+
+The helpers generate Supabase tool arguments and validate saved tool responses; they do not log in, hold credentials, or contact the database themselves. A failed connector call blocks database-dependent work. Preserve the draft and continue only unrelated local work; never silently publish to files instead.
 
 ## Control and unresolved
 
