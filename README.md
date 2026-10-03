@@ -12,6 +12,7 @@ Stay focused on the current purpose while preserving creativity.
 - 현재 목표를 막는 선행 과제는 LIFO 스택으로 처리한 뒤 원래 작업 재개.
 - 지식그래프, 현재 규칙·결정, 완료 이력, 미해결 질문 보존.
 - 중단 전 진행 상황과 다음 행동을 기록하고, 간결하게 설명.
+- 긴 작업은 지원 호스트의 worker에 위임하거나 짧은 단위로 나누어 응답. 선택형 실행 큐로 인계·결과·복구 상태 보존.
 
 작업 관리 워크플로우이며 의료적 ADHD 진단·치료 기능은 제공하지 않습니다.
 
@@ -65,6 +66,27 @@ python3 -m pip install -r plugins/adhd/requirements.txt
 
 기존 개인 ADHD 스킬이 설치되어 있다면 같은 이름의 별도 사본입니다. 플러그인 설치를 확인한 다음 필요에 따라 기존 스킬을 비활성화할 수 있습니다. 이 저장소 업데이트는 기존 개인 스킬을 자동 교체하지 않습니다.
 
+## 선택 기능: worker 실행 큐
+
+긴 작업의 인계와 복구가 필요하면 `.adhd/execution/jobs.sqlite3`에 실행 상태를 따로 보존할 수 있습니다. 기존 작업 큐·스택, 숫자 작업·이력 ID와 DB 지식 기능은 바뀌지 않으며, 기본 사용에는 실행 큐 초기화가 필요 없습니다.
+
+- coordinator가 기존 작업 ID에 job을 연결하고, worker는 자신의 실행 체크포인트·결과만 기록합니다. coordinator가 결과를 검증한 뒤 기존 작업을 완료합니다.
+- 실행 job은 높은 우선순위부터, 동순위는 FIFO로 배정합니다. 시도 횟수 제한과 임대·시도별 토큰으로 중복 소유와 늦게 도착한 결과를 방어합니다.
+- 임대가 만료되면 외부 작업이 실제로 끝났는지 불확실하므로 차단 상태로 둡니다. 결과 확인과 명시적인 안전 재시도 판단 없이 외부 효과를 반복하지 않습니다.
+
+큐는 worker를 시작하거나 알림을 보내지 않습니다. 호스트에 허용된 worker 기능이 있으면 위임하고, 없으면 짧은 작업 단위 후 체크포인트를 저장하고 응답합니다. 호스트가 멈추거나 절전 상태일 때 계속 실행되는 서비스도, 실시간 완료 보장도 아닙니다.
+
+요청한 리마인더는 긴 작업의 완료를 기다리지 않고 **호스트의 예약 기능에 즉시 등록**해야 합니다. 실제 예약 성공과 호스트 예약 ID를 확인한 경우에만 예약됐다고 알립니다. 로컬 큐에 기록하는 것만으로는 리마인더가 예약되지 않습니다.
+
+[실행 큐 안내](plugins/adhd/skills/adhd/references/execution.md)에 따라 실제 설치 사본의 `ADHD_SCRIPT_DIR`와 기존 비공개 런타임 `ADHD_ROOT`를 지정한 뒤 확인합니다.
+
+```bash
+python3 "$ADHD_SCRIPT_DIR/execctl.py" version
+python3 "$ADHD_SCRIPT_DIR/execctl.py" --root "$ADHD_ROOT" doctor
+```
+
+`version`은 런타임을 만들지 않고 `0.5.0`·실행 schema 1·작업 schema 2를 확인합니다. `doctor`는 첫 사용 시 선택형 DB를 만들고 무결성과 만료된 실행 수를 점검하지만 worker 실행·임대 회수는 하지 않습니다. 실행 DB와 이벤트도 비공개 작업 기록이며 공개 저장소에 넣지 않습니다.
+
 ## 선택 기능: DB 지식그래프
 
 파일 모드가 기본입니다. 사용자가 저장 대상과 정보 범위를 명시적으로 선택하면, **이미 인증된 Supabase 커넥터**로 Knowledge만 DB에 저장할 수 있습니다. 새 MCP 서버, 브라우저 로그인, API 키 저장은 필요하지 않습니다. Task·Control·History·Unresolved와 프로젝트 산출물은 기존 위치에 유지됩니다.
@@ -90,6 +112,7 @@ ADHD 자체에 대한 문제나 아이디어를 발견하면 처음 한 번 **�
 | `.agents/plugins/marketplace.json` | 플러그인 검색·설치용 목록 |
 | `plugins/adhd/.codex-plugin/plugin.json` | 버전·소개·스킬 경로 |
 | `plugins/adhd/skills/adhd/` | ADHD 지침·명령·복구·회귀 테스트의 기준 원본 |
+| `plugins/adhd/skills/adhd/references/execution.md` | 선택형 worker 실행 큐·호스트 책임·안전 복구 |
 | `plugins/adhd/skills/adhd/assets/knowledge_schema.sql` | 선택한 DB에 적용할 비공개 지식 스키마·함수 |
 | `scripts/check.py` | 패키지 구조 및 런타임 검증 |
 | `.github/workflows/validate.yml` | 변경 시 자동 검증 |
@@ -98,4 +121,13 @@ ADHD 자체에 대한 문제나 아이디어를 발견하면 처음 한 번 **�
 python3 scripts/check.py
 ```
 
-지침이나 동작을 바꾸면 검증 후 버전과 [변경 이력](CHANGELOG.md)을 갱신합니다. GitHub 원본을 먼저 갱신하고 릴리스를 검증한 다음, 이미 설치된 환경을 연결 방식에 맞춰 동기화·업데이트하고 새 대화에서 확인합니다. 기존 개인 스킬도 원본을 보존한 뒤 별도로 동기화하고 버전을 확인합니다. 프로젝트 산출물과 개인 작업 기록은 이 공개 저장소에 포함하지 않습니다.
+지침이나 동작을 바꾸면 검증 후 버전과 [변경 이력](CHANGELOG.md)을 갱신합니다. GitHub 원본을 먼저 갱신하고 해당 리비전의 검증 결과를 확인합니다. 프로젝트 산출물과 개인 작업 기록은 이 공개 저장소에 포함하지 않습니다.
+
+### 이미 설치한 사본 업데이트
+
+- **워크스페이스 GitHub 가져오기:** Admin → Plugins → Marketplaces에서 해당 소스의 **Sync now**를 선택하고 저장된 결과 보고서를 확인합니다. 오류가 있으면 이전 정상 버전이 유지될 수 있습니다. 고정 커밋을 선택한 소스는 새 커밋을 자동 추적하지 않습니다. [공식 동기화 안내](https://learn.chatgpt.com/docs/enterprise/plugin-management#keep-plugins-up-to-date)
+- **Codex Git 마켓플레이스:** `codex plugin marketplace list`로 소스와 이름을 확인한 뒤 `codex plugin marketplace upgrade personal`로 이 저장소의 소스를 새로 고칩니다. `personal`이 실제로 Snow0821/ADHD인지 먼저 확인합니다. 앱을 다시 시작하고 설치 사본을 확인합니다. [공식 CLI 안내](https://developers.openai.com/plugins/build/plugins#add-a-marketplace-from-the-cli)
+- **로컬 개발 설치:** 원본 플러그인을 바꾼 뒤 `plugin-creator`의 업데이트 절차를 사용합니다. 수동 구성이라면 마켓플레이스가 가리키는 플러그인 디렉터리를 갱신하고 앱을 다시 시작합니다. [공식 로컬 설치 안내](https://developers.openai.com/plugins/build/plugins#install-a-local-plugin-manually)
+- **별도 개인 ADHD 스킬:** 플러그인과 독립된 사본입니다. 원본을 백업하고 허용된 방식으로 따로 동기화합니다. 마켓플레이스 갱신만으로 교체됐다고 판단하지 않습니다.
+
+마지막으로 설치 플러그인의 버전(`0.5.0`)을 확인합니다. 별도 개인 스킬은 동기화한 원본 리비전과 파일을 대조하고, 새 대화가 실제로 읽는 사본에서 `execctl.py version`을 실행해 확인합니다. 실행 큐를 사용한다면 기존 비공개 런타임에서 `doctor`도 확인합니다. 저장소 push, 마켓플레이스 sync, 개인 설치 반영은 서로 다른 단계입니다. 여기의 검증 성공은 모든 계정의 자동 업데이트나 공개 디렉터리 등록을 보장하지 않습니다.
