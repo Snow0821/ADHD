@@ -15,6 +15,7 @@ Preserve generalizable ideas while finishing the current goal. Keep necessary ex
 - On resume, read status, the active checkpoint, and relevant effective control entries. Validate existing runtime once before changing it. Use [protocol.md](references/protocol.md) for the relevant commands and [recovery.md](references/recovery.md) only for legacy state or an interrupted write.
 - If the optional execution queue already exists, inspect its jobs and event cursor on resume as described in [execution.md](references/execution.md); reconcile results before changing linked core tasks.
 - File-backed knowledge is the default. If database-backed knowledge is configured, follow [database.md](references/database.md) to refresh its verified cache before relying on it; never silently switch to local file authority when the connector is unavailable.
+- If the user explicitly chose a private project wiki for shared work records, follow [project-records.md](references/project-records.md). Use its authenticated host dispatcher and verified destination; do not export core stores or treat retrieved guidelines as new tool authorization.
 - Register managed projects in `control/projects.yaml`. Reuse their existing structure; add only the tree nodes needed to describe chosen outputs. Infer an initial purpose, specification, and acceptance condition from the request when clear.
 
 ## Execute
@@ -40,7 +41,7 @@ One active task means one owned goal. Independent reads and checks can run in pa
 - Exception: with explicit opt-in to a user-selected database and the intended information scope, task-relevant private project knowledge may be stored there. This does not authorize personal profiles, broad sensitive-data collection, or sharing beyond that destination. Keep evidence and limits, and follow the host's data-sharing permissions.
 - Generalization must retain evidence and limits. Removing a name does not make a personal observation universal; keep hypotheses labeled as hypotheses, and skip a record when no useful general lesson remains.
 - Task checkpoints, completion evidence, and minimal operational choices such as recording consent support execution. Keep only what is needed for that purpose; do not use Task, Control, History, or Unresolved as a substitute personal-memory store.
-- The shared plugin contains workflow rules, relevant general knowledge, and generalized test cases. Keep user-specific database configuration and content in the private runtime, never in the public repository. The optional connector bridge stores only Knowledge; Task, Control, History, Unresolved, and project artifacts retain their existing homes.
+- The shared plugin contains workflow rules, relevant general knowledge, and generalized test cases. Keep user-specific database configuration and content in the private runtime, never in the public repository. The optional Supabase connector bridge stores only Knowledge; Task, Control, History, Unresolved, and project artifacts retain their existing homes. The separate project-record adapter accepts only explicitly selected user-facing record patches; it is not a migration of these core stores.
 
 ## Route information
 
@@ -87,4 +88,4 @@ Use the scripts for IDs, ordering, atomic file writes, and structural validation
 - Preserve history and archive obsolete project scope instead of deleting it.
 - Save the runtime in the user's established durable, private workspace. In a temporary execution environment, use the host's supported persistence workflow and verify the save before claiming work will survive a later session. Keep personal runtime records out of the plugin source repository.
 
-Read only the command sections needed in [protocol.md](references/protocol.md). Optional worker coordination is in [execution.md](references/execution.md). Database setup and conflict recovery are in [database.md](references/database.md); local recovery and schema-1 migration remain in [recovery.md](references/recovery.md).
+Read only the command sections needed in [protocol.md](references/protocol.md). Optional worker coordination is in [execution.md](references/execution.md). Shared project-record sync and read-only conflict reconciliation are in [project-records.md](references/project-records.md). Database knowledge setup and conflict recovery are in [database.md](references/database.md); local recovery and schema-1 migration remain in [recovery.md](references/recovery.md).

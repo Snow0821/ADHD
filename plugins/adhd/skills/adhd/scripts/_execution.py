@@ -15,7 +15,7 @@ from typing import Callable, Mapping
 import yaml
 
 
-PACKAGE_VERSION = "0.5.1"
+PACKAGE_VERSION = "0.6.0"
 EXECUTION_SCHEMA = 1
 
 
