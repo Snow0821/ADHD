@@ -698,8 +698,8 @@ class ExecutionTests(unittest.TestCase):
         self.assertEqual(self.queue.events(), events)
         self.queue.reconcile()
         self.assertEqual(self.queue.doctor()["expired_running"], 0)
-        manifest = json.loads((SCRIPTS.parents[2] / ".codex-plugin/plugin.json").read_text())
-        self.assertEqual(PACKAGE_VERSION, manifest["version"])
+        # Plugin-manifest parity is checked by repository scripts/check.py.
+        # Standalone personal skills intentionally have no parent plugin manifest.
 
     def test_doctor_rejects_corrupt_state_attempt_or_ownership(self):
         job = self.submit(max_attempts=2)
