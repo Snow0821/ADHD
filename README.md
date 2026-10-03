@@ -85,7 +85,7 @@ python3 "$ADHD_SCRIPT_DIR/execctl.py" version
 python3 "$ADHD_SCRIPT_DIR/execctl.py" --root "$ADHD_ROOT" doctor
 ```
 
-`version`은 런타임을 만들지 않고 `0.5.1`·실행 schema 1·작업 schema 2를 확인합니다. `doctor`는 첫 사용 시 선택형 DB를 만들고 무결성과 만료된 실행 수를 점검하지만 worker 실행·임대 회수는 하지 않습니다. 실행 DB와 이벤트도 비공개 작업 기록이며 공개 저장소에 넣지 않습니다.
+`version`은 런타임을 만들지 않고 `0.6.0`·실행 schema 1·작업 schema 2를 확인합니다. `doctor`는 첫 사용 시 선택형 DB를 만들고 무결성과 만료된 실행 수를 점검하지만 worker 실행·임대 회수는 하지 않습니다. 실행 DB와 이벤트도 비공개 작업 기록이며 공개 저장소에 넣지 않습니다.
 
 ## 선택 기능: DB 지식그래프
 
@@ -96,6 +96,18 @@ python3 "$ADHD_SCRIPT_DIR/execctl.py" --root "$ADHD_ROOT" doctor
 - 오류나 연결 중단 시 초안을 보존합니다. 자동 파일 모드 전환은 없으며, DB에 의존하지 않는 로컬 작업만 계속할 수 있습니다.
 
 [설정·이전·복구 절차](plugins/adhd/skills/adhd/references/database.md)를 따라 선택한 DB에 스키마를 준비하고, 원본을 백업한 뒤 연결합니다. 기존 로컬 그래프를 새 원격 그래프로 이전할 때만 의도적으로 `configure --new`를 사용합니다. 연결만으로 기존 데이터를 덮어쓰거나 설치된 개인 스킬을 갱신하지 않습니다.
+
+## 선택 기능: 개인 프로젝트 위키 연결
+
+명시적으로 선택한 비공개 위키의 프로젝트·할 일·결정·문서·일정 준비 기록을 `recordbridge.py`로 관리할 수 있습니다. 기존 `search_records/read_record/create_record/update_record` 커넥터 계약을 재사용하므로 별도 DB 스키마·API 키·MCP 서버를 만들지 않습니다.
+
+- 호스트가 검증된 인증 커넥터 호출을 전달하면, 스크립트가 계정 확인 → 조회 → 기존 필드 보존 병합 → revision 조건부 저장 → 재조회 검증을 처리합니다. 셸 자체가 커넥터 로그인 세션을 얻는 것은 아닙니다.
+- 명시적으로 선택한 사용자용 기록만 입력합니다. 기존 작업 큐·Control·History·Unresolved·지식그래프를 통째로 내보내거나 권한 지침을 복사하지 않습니다.
+- 새로 생성할 때는 안정된 기록 키를 검색하고, 응답을 잃으면 작업을 보존하고 읽기로 확인합니다. 불확실한 쓰기를 자동 반복하지 않습니다. 하나의 목적지에 하나의 지속 가능한 상태 폴더와 coordinator를 사용해야 하며, 여러 호스트 사이의 원자적 중복 방지는 제공하지 않습니다.
+- 프로젝트 담당자와 실제 실행 상태를 나누고 마지막 완료·현재 작업·차단 요인·다음 행동·확인 시각·확인 범위를 남길 수 있습니다. DB에 상태가 있다는 것만으로 worker가 실행 중이거나 일정 알림이 예약된 것은 아닙니다.
+- 기존 캘린더가 실제 일정의 기준이며, 위키에는 준비 사항과 확인된 일정·예약 참조만 둡니다. 지침과 결정은 범위·출처·버전·관련 기록 ID로 가볍게 연결할 수 있습니다.
+
+[호스트 연결·일괄 처리·충돌 복구 안내](plugins/adhd/skills/adhd/references/project-records.md)를 따릅니다. 설치만으로 상시 실행이나 자동 갱신이 시작되지 않습니다.
 
 ## 개선 의견
 
@@ -112,6 +124,7 @@ ADHD 자체에 대한 문제나 아이디어를 발견하면 처음 한 번 **�
 | `.agents/plugins/marketplace.json` | 플러그인 검색·설치용 목록 |
 | `plugins/adhd/.codex-plugin/plugin.json` | 버전·소개·스킬 경로 |
 | `plugins/adhd/skills/adhd/` | ADHD 지침·명령·복구·회귀 테스트의 기준 원본 |
+| `plugins/adhd/skills/adhd/references/project-records.md` | 사용자용 위키 기록·인증 호스트 연결·읽기 검증 |
 | `plugins/adhd/skills/adhd/references/execution.md` | 선택형 worker 실행 큐·호스트 책임·안전 복구 |
 | `plugins/adhd/skills/adhd/assets/knowledge_schema.sql` | 선택한 DB에 적용할 비공개 지식 스키마·함수 |
 | `scripts/check.py` | 패키지 구조 및 런타임 검증 |
@@ -130,4 +143,4 @@ python3 scripts/check.py
 - **로컬 개발 설치:** 원본 플러그인을 바꾼 뒤 `plugin-creator`의 업데이트 절차를 사용합니다. 수동 구성이라면 마켓플레이스가 가리키는 플러그인 디렉터리를 갱신하고 앱을 다시 시작합니다. [공식 로컬 설치 안내](https://developers.openai.com/plugins/build/plugins#install-a-local-plugin-manually)
 - **별도 개인 ADHD 스킬:** 플러그인과 독립된 사본입니다. 원본을 백업하고 허용된 방식으로 따로 동기화합니다. 마켓플레이스 갱신만으로 교체됐다고 판단하지 않습니다.
 
-마지막으로 설치 플러그인의 버전(`0.5.1`)을 확인합니다. 별도 개인 스킬은 동기화한 원본 리비전과 파일을 대조하고, 새 대화가 실제로 읽는 사본에서 `execctl.py version`을 실행해 확인합니다. 실행 큐를 사용한다면 기존 비공개 런타임에서 `doctor`도 확인합니다. 저장소 push, 마켓플레이스 sync, 개인 설치 반영은 서로 다른 단계입니다. 여기의 검증 성공은 모든 계정의 자동 업데이트나 공개 디렉터리 등록을 보장하지 않습니다.
+마지막으로 설치 플러그인의 버전(`0.6.0`)을 확인합니다. 별도 개인 스킬은 동기화한 원본 리비전과 파일을 대조하고, 새 대화가 실제로 읽는 사본에서 `execctl.py version`을 실행해 확인합니다. 실행 큐를 사용한다면 기존 비공개 런타임에서 `doctor`도 확인합니다. 저장소 push, 마켓플레이스 sync, 개인 설치 반영은 서로 다른 단계입니다. 여기의 검증 성공은 모든 계정의 자동 업데이트나 공개 디렉터리 등록을 보장하지 않습니다.
