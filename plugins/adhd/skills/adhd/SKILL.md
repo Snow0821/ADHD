@@ -13,6 +13,7 @@ Preserve generalizable ideas while finishing the current goal. Keep necessary ex
 - Use the user's workspace or the established ADHD root; otherwise find the nearest ancestor with `.adhd/state.yaml`. Do not create a second runtime merely because the working directory changed.
 - When persistent execution state is needed and absent, initialize `<workspace>/.adhd` with `adhdctl.py init`. This creates all five stores. Keep projects and artifacts outside the runtime and mutable data outside the installed skill.
 - On resume, read status, the active checkpoint, and relevant effective control entries. Validate existing runtime once before changing it. Use [protocol.md](references/protocol.md) for the relevant commands and [recovery.md](references/recovery.md) only for legacy state or an interrupted write.
+- If the optional execution queue already exists, inspect its jobs and event cursor on resume as described in [execution.md](references/execution.md); reconcile results before changing linked core tasks.
 - File-backed knowledge is the default. If database-backed knowledge is configured, follow [database.md](references/database.md) to refresh its verified cache before relying on it; never silently switch to local file authority when the connector is unavailable.
 - Register managed projects in `control/projects.yaml`. Reuse their existing structure; add only the tree nodes needed to describe chosen outputs. Infer an initial purpose, specification, and acceptance condition from the request when clear.
 
@@ -22,9 +23,16 @@ Preserve generalizable ideas while finishing the current goal. Keep necessary ex
 2. Dispatch when `active` is empty. Resume the top parent on the LIFO stack before taking the oldest queued task.
 3. Work toward the active goal. Use `spawn` only for a distinct prerequisite that blocks it; checkpoint the parent first. Queue other committed actions and route ideas through the table below.
 4. Checkpoint before interruption, handoff, a risky state change, or a blocking external answer. Ask only when the missing answer prevents correct authorized progress; finish independent work within the active task first. Keep the blocked task active.
-5. Verify the outcome, record durable results, and close as `completed`, `cancelled`, or `obsolete`. Closing dispatches the next task. Continue until no unprocessed input or execution work remains, unless the user pauses or an external condition blocks progress. Report that as paused or blocked, never idle.
+5. Verify the outcome, record durable results, and close as `completed`, `cancelled`, or `obsolete`. Closing dispatches the next task. Continue authorized work while yielding promptly to new user input. If the user pauses, the host cannot keep running, or an external condition blocks progress, save a checkpoint and report the actual paused or blocked state, never idle.
 
 One active task means one owned goal. Independent reads and checks can run in parallel within it; serialize shared state changes. `taskctl.py spawn` changes task ownership and is not a subagent launch.
+
+## Responsive execution
+
+- Keep the conversation available during long work. When the host provides authorized workers, delegate a bounded work package with an acceptance condition and return useful progress promptly. Without workers, take a bounded cooperative step, checkpoint, and respond; do not claim background progress after execution stops.
+- For opted-in durable worker coordination, follow [execution.md](references/execution.md). Its separate SQLite job queue does not replace the core FIFO/LIFO task model. Only the coordinator changes core tasks and accepts verified worker results; workers update their execution records only.
+- Handle requested reminders through the host scheduler immediately, independently of a long-running job. Record the confirmed host schedule ID and timing. A local queue entry is not a scheduled reminder; report unsupported or unconfirmed scheduling honestly.
+- Delegation, queue priority, and retry records grant no extra permission. Preserve the host's authorization boundaries, and never automatically replay an uncertain external side effect.
 
 ## Knowledge boundary
 
@@ -73,10 +81,10 @@ Use the scripts for IDs, ordering, atomic file writes, and structural validation
 
 - State stores numeric task IDs only; task and history IDs share a never-reused sequence.
 - Every open task is in exactly one of `active`, `stack`, or `queue`. There is at most one active task.
-- Idle requires `active: null`, `stack: []`, `queue: []`, and no unprocessed input.
+- Idle requires `active: null`, `stack: []`, `queue: []`, no unprocessed input, and no `queued`, `running`, `failed`, or `blocked` execution jobs when the optional queue is enabled.
 - Knowledge is scoped; project-node references are qualified as `<project-id>:p000000`.
 - In database mode, edit only an explicit draft and publish through the connector bridge. A local draft, pending write, or cache made stale by interruption is not published knowledge and cannot satisfy task/tree references. Confirm publication with a fresh database read.
 - Preserve history and archive obsolete project scope instead of deleting it.
 - Save the runtime in the user's established durable, private workspace. In a temporary execution environment, use the host's supported persistence workflow and verify the save before claiming work will survive a later session. Keep personal runtime records out of the plugin source repository.
 
-Read only the command sections needed in [protocol.md](references/protocol.md). Database setup and conflict recovery are in [database.md](references/database.md); local recovery and schema-1 migration remain in [recovery.md](references/recovery.md).
+Read only the command sections needed in [protocol.md](references/protocol.md). Optional worker coordination is in [execution.md](references/execution.md). Database setup and conflict recovery are in [database.md](references/database.md); local recovery and schema-1 migration remain in [recovery.md](references/recovery.md).

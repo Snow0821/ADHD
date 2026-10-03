@@ -7,6 +7,7 @@ Read the section needed for the current operation. Use each command's `--help` f
 - [Paths and runtime](#paths-and-runtime)
 - [Initialize and register](#initialize-and-register)
 - [Task operations](#task-operations)
+- [Optional worker execution](#optional-worker-execution)
 - [Knowledge operations](#knowledge-operations)
 - [Database-backed knowledge](#database-backed-knowledge)
 - [Control and unresolved](#control-and-unresolved)
@@ -101,6 +102,10 @@ python3 "$ADHD_SCRIPT_DIR/taskctl.py" --root "$ADHD_ROOT" close \
 ```
 
 Outcomes: `completed`, `cancelled`, `obsolete`. Omit unused fields; use `--created-task` for tasks created during this work. A close decision is a historical occurrence; use control for a newly effective rule.
+
+## Optional worker execution
+
+[execution.md](execution.md) describes the opt-in SQLite execution queue, worker claims, checkpoints, results, events, and safe retry. It leaves the schema-2 task FIFO/LIFO and numeric task/history sequence unchanged. `execctl.py` is a coordination helper, not a worker launcher, scheduler, or notification service. Keep core task mutations with the coordinator; a worker result never closes a task automatically.
 
 ## Knowledge operations
 

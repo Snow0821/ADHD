@@ -63,6 +63,9 @@ def check_package() -> Path:
     for key in ("composerIcon", "logo"):
         require(relative_path(plugin, interface[key]).is_file(), f"Missing {key}")
     skill = relative_path(plugin, manifest["skills"]) / "adhd"
+    execution_source = (skill / "scripts/_execution.py").read_text(encoding="utf-8")
+    require(f'PACKAGE_VERSION = "{manifest["version"]}"' in execution_source,
+            "Installed execution version and plugin manifest disagree")
     content = (skill / "SKILL.md").read_text(encoding="utf-8")
     parts = content.split("---", 2)
     require(len(parts) == 3 and not parts[0].strip(), "Invalid skill frontmatter")
