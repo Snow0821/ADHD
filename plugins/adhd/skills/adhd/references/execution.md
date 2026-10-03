@@ -57,7 +57,7 @@ python3 "$ADHD_SCRIPT_DIR/execctl.py" --root "$ADHD_ROOT" status
 python3 "$ADHD_SCRIPT_DIR/execctl.py" --root "$ADHD_ROOT" events --after 0 --limit 100
 ```
 
-`version` reports `package_version: "0.5.0"`, `execution_schema: 1`, and `task_schema: 2`. `doctor` additionally reports `integrity: "ok"`, `worker_started: false`, and `expired_running`. That false value means this command launched no worker; it does not check whether another host worker is alive. Doctor checks SQLite integrity and record invariants without claiming jobs or reconciling expired leases.
+`version` reports `package_version: "0.5.1"`, `execution_schema: 1`, and `task_schema: 2`. `doctor` additionally reports `integrity: "ok"`, `worker_started: false`, and `expired_running`. That false value means this command launched no worker; it does not check whether another host worker is alive. Doctor checks SQLite integrity and record invariants without claiming jobs or reconciling expired leases.
 
 `--retry-safe` is appropriate here only because the trusted handler below performs a repeat-safe local calculation. Omit it by default. `--max-attempts` is 1 by default (allowed range 1–100). `--available-at` accepts UTC Unix seconds as the earliest eligibility time, not a host wake or reminder reservation. The host clock controls eligibility and leases.
 
